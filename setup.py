@@ -7,10 +7,10 @@ setup(
     version="0.1.0",
     packages=find_packages(include=["clnutils", "clnutils.*"]),
     install_requires=[
-        "pandas >= 1.5.2",
-        "numpy >= 1.23.5",
-        "matplotlib >= 3.7.1",
-        "seaborn >= 0.12.2",
+        "numpy>=1.22",
+        "pandas>=1.5",
+        "seaborn>=0.12",
+        "matplotlib>=3.7",
     ],
     python_requires=">=3.9",
 )
