@@ -9,37 +9,29 @@ def overlap(
     df, hole_col="Drill Hole", t1="From", t2="To", samp_id1="Sample ID", intv="Interval"
 ):
     """Assesses drillhole overlap between samples.
-
-    args:
-        df - Pandas Data Frame, data frame of drillhole samples
-        hole_col - string, name of column in df that identifies
-                   the drill hole
-                   default: Drill Hole
-        t1 - string, column name for samples depth start
-             default: From
-        t2 - string, column name for sample depth end
-             default: To
-        samp_id1 - string, column name of unique identifier for sample
-                   default: order
-        samp_id2 - string, column name of second unique identifier for sample
-                   default: Sample ID
-        intv - string, column name of interval distance,
-               set to None if interval column not present,
-               if None the function will calculate the interval
-               default: Interval
-
-    returns:
-        overlap_idx - returns a data frame with the following columns:
-
-            'ovlp_up': str, sample_id of upper sample
-
-            'ovlp_lwr': str, sample_id of lower sample
-
-            'ovlp_dist': numeric, distance of overlap
-
-            'pct_ovlp_up': ovlp_dist over interval distance of upper sample
-
-            'pct_ovlp_lwr': ovlp_dist over interval distance of lower sample
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
+    hole_col : str, optional, default 'Drill Hole'
+        column name of hole_id
+    t1 : str, optional, default 'From'
+        column name of start depth
+    t2 : str, optional, default 'To'
+        column name of end depth
+    samp_id1 : str, optional, default 'Sample ID'
+        column name of sample id
+    intv : str, optional, default 'Interval'
+        column name of interval distance
+    Returns
+    -------
+    pandas DataFrame
+        DataFrame of overlap data with columns:
+        'ovlp_up': str, sample_id of upper sample
+        'ovlp_lwr': str, sample_id of lower sample
+        'ovlp_dist': numeric, distance of overlap
+        'pct_ovlp_up': ovlp_dist over interval distance of upper sample
+        'pct_ovlp_lwr': ovlp_dist over interval distance of lower sample
     """
     holes = df[hole_col].unique()  # get the unique holes in the df
 
@@ -98,30 +90,27 @@ def id_ovlp_to_drop(
     ovlp_over_cutoff=None,
 ):
     """Identifies which of overlaping samples to drop
-
-    args:
-        df - pandas dataframe, contains upper and lower sample names,
-            percent of overlap for both upper and lower samples
-
-        pct_up - str, default 'pct_ovlp_up'
-            column name of overlap percent of upper sample
-
-        pct_lwr - str, default 'pct_ovlp_lw'
-            column name of overlap percent of lower sample
-
-        samp_up - str, 'ovlp_up'
-            column name of upper sample name
-
-        samp_lwr - str, default 'ovlp_lwr'
-            column name of lower sample name
-
-        ovlp_over_ffty - list_like, default None
-            optional, boolean list to mask input df by, if None
-            df will be used, if list passed df will be masked
-            by ovlp_over_ffty, keeping only True indexes
-
-    returns:
-        temp - copy of original dataframe
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing upper and lower sample names,
+        percent of overlap for both upper and lower samples
+    pct_up : str, optional, default 'pct_ovlp_up'
+        column name of overlap percent of upper sample
+    pct_lwr : str, optional, default 'pct_ovlp_lw'
+        column name of overlap percent of lower sample
+    samp_up : str, optional, default 'ovlp_up'
+        column name of upper sample name
+    samp_lwr : str, optional, default 'ovlp_lwr'
+        column name of lower sample name
+    ovlp_over_cutoff : list_like, optional, default None
+        optional, boolean list to mask input df by, if None
+        df will be used, if list passed df will be masked
+        by ovlp_over_cutoff, keeping only True indexes
+    Returns
+    -------
+    pandas DataFrame
+        DataFrame of overlap data with columns
     """
     if ovlp_over_cutoff is not None:
         temp = df[ovlp_over_cutoff].copy().reset_index(drop=True)
@@ -138,23 +127,21 @@ def id_ovlp_to_drop(
 def drop_metals_aba_dup(df, which="Metals", ignore_na=True, custom_range=None):
     """Drops rows based on duplicates in either the Metals or ABA
        subset of columns.
-
-    args:
-        df - Pandas DataFrame from which samples will be dropped
-
-        which - string, 'Metals' or 'ABA' indicates which group
-                to drop
-
-        ignore_na - bool, default True, whether to ignore
-                    rows with all nan values when droping
-                    duplicates
-
-        custom_range - list-like, length 2 list of strings for
-                       begin and end column names to subset,
-                       subset is inclusive on both ends
-
-    returns:
-        df - returns a copy of the dataframe with duplicates dropped
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data, from which duplicates will be dropped
+    which : str, optional, default 'Metals'
+        string, 'Metals' or 'ABA' indicates which group to drop
+    ignore_na : bool, optional, default True
+        whether to ignore rows with all nan values when droping duplicates
+    custom_range : list-like, optional, default None
+        length 2 list of strings for begin and end column names to subset,
+        subset is inclusive on both ends
+    Returns
+    -------
+    pandas DataFrame
+        returns a copy of the dataframe with duplicates dropped
     """
     # predetermined ranges for metal and aba
     if which.lower() == "metals":
@@ -226,47 +213,55 @@ def get_discontinuity(exp_df, holeid="HOLEID", frm="SAMPFROM", to="SAMPTO"):
 
 def get_bounds(df):
     """Gets the overall min and overall max of a df
-
-    args:
-        df - pandas dataframe, all numeric columns
-
-    returns:
-        df.min().min(),df.max().max() - numeric overall min and overall max
+    Parameters
+    ----------
+    df : pandas DataFrame
+        all numeric columns
+    Returns
+    -------
+    tuple
+        tuple of min and max values, length 2
     """
     return df.min().min(), df.max().max()
 
 
 def no_overlapping(x1, x2, y1, y2):
     """Tests for overlap between two sets of numerical values
-
-    args:
-        x1 - numerical, minimum of group 1
-
-        x2 - numerical, maximum of group 1
-
-        y1 - numerical, minimum of group 2
-
-        y2 - numerical, maximum of group 2
-
-    returns:
-        bool - True if groups do not overlap, else false"""
-    return max(x1, y1) >= min(x2, y2)
+    Parameters
+    ----------
+    x1 : numerical
+        minimum of group 1
+    x2 : numerical
+        maximum of group 1
+    y1 : numerical
+        minimum of group 2
+    y2 : numerical
+        maximum of group 2
+    Returns
+    -------
+    bool
+        True if groups do not overlap, else false
+    """
+    return max(x1, y1) >= min(x2, y2)  # type: ignore
 
 
 def find_overlap(minval, maxval, targetfrom, targetto):
     """From two series finds where there is overlap with a min and max value
-
-    args:
-        minval - numerical, a minimum value
-
-        maxval - numerical, a maximum value
-
-        targetfrom - list-like, numerical values for lower bound
-
-        targetto - list-like, numerical values for upper bound
-
-    returns:
-        two list-like objects with boolean values"""
+    Parameters
+    ----------
+    minval : numerical
+        minimum value
+    maxval : numerical
+        maximum value
+    targetfrom : list-like
+        numerical values for lower bound
+    targetto : list-like
+        numerical values for upper bound
+    Returns
+    -------
+    tuple
+        two list-like objects with boolean values
+    """
     return np.where(targetfrom < maxval, True, False), np.where(
         targetto > minval, True, False
     )
@@ -284,36 +279,33 @@ def test_continuity(
 ):
     """Given two datasets with sample distance data, one with known discontinuities,
         identifies if and where the second dataset shares those discontinuities
-
-    args:
-        discontinuity - pd dataframe, with known discontinuous gaps, has at
-            minimum hole_id, sample_start, sample_end
-
-        env_holes - pd dataframe, test dataframe, discontinuities unknown
-            has at minimum hole_id, sample_start, sample_end
-
-        expholeid - str, default 'HOLEID'
-            column name of hole_id column for discontinuity df
-
-        expfrm - str, default 'SAMPFROM'
-            column name of sample_start column for discontinuity df
-
-        expto - str, default 'SAMPTO'
-            column name of sample_enc column for discontinuity df
-
-        envholeid - str, default 'Drill Hole'
-            column name of hole_id column for env_holes df
-
-        envfrm - str, default 'From'
-            column name of sample_start column for env_holes df
-
-        envto - str, default 'To'
-            column name of sample_enc column for env_holes df
-
-    returns:
-        no_data_env,no_data_exp - two list objects with
-            observations from discontinuity and env_holes where
-            a discontinuity match was found
+    Parameters
+    ----------
+    discontinuity : pandas DataFrame
+        dataframe with known discontinuities, has at minimum hole_id, sample_start,
+        sample_end
+    env_holes : pandas DataFrame
+        test dataframe, discontinuities unknown, has at minimum hole_id, sample_start,
+        sample_end
+    expholeid : str, optional
+        column name of hole_id column for discontinuity df, by default 'HOLEID'
+    expfrm : str, optional
+        column name of sample_start column for discontinuity df, by default 'SAMPFROM'
+    expto : str, optional
+        column name of sample_enc column for discontinuity df, by default 'SAMPTO'
+    envholeid : str, optional
+        column name of hole_id column for env_holes df, by default 'Drill Hole'
+    envfrm : str, optional
+        column name of sample_start column for env_holes df, by default 'From'
+    envto : str, optional
+        column name of sample_enc column for env_holes df, by default 'To'
+    Returns
+    -------
+    no_data_env : pandas DataFrame
+        dataframe with holes that do not have discontinuities
+    no_data_exp : pandas DataFrame
+        dataframe with holes that do not have discontinuities
+    as a tuple with (no_data_env,no_data_exp)
     """
     # instantiate two empty lists
     no_data_env = []

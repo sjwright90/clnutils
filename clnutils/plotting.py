@@ -7,16 +7,23 @@ import matplotlib.ticker as ticker
 
 def id_generator(df, hole_col, from_col, to_col, composite=False):
     """Generate sample names from hole_id and depth
-    args:
-        df - pandas DataFrame
-        hole_col - str, column name of hole_id
-        from_col - str, column name of start depth
-        to_col - str, column name of end depth
-        composite - bool, default False
-                    whether to return a composite id name in the form
-                    'hole_id (from-to)' or to return two seperate
-                    names in the form 'hole_id from' and 'hole_id to'
-    returns:
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
+    hole_col : str
+        column name of hole_id
+    from_col : str
+        column name of start depth
+    to_col : str
+        column name of end depth
+    composite : bool, optional, default False
+        whether to return a composite id name in the form
+        'hole_id (from-to)' or to return two seperate
+        names in the form 'hole_id from' and 'hole_id to'
+    Returns
+    -------
+    pandas Series
         1 or 2 pandas Series of type str of same length as original data
         with generated id names
     """
@@ -30,11 +37,15 @@ def id_generator(df, hole_col, from_col, to_col, composite=False):
 
 def roundup(num, base):
     """Rounds a number UP to the closest value divisible by base
-    args:
-        num - numeric, value to be rounded
-        base - int, base system to round in
-    returns:
-        int
+    Parameters
+    ----------
+    num : numeric
+        value to be rounded
+    base : int
+        base system to round in
+    Returns
+    -------
+    int
     """
     return base * math.ceil(num / base)
 
@@ -48,14 +59,23 @@ def lith_linear_proportion(
     percent=True,
 ):
     """Calculates linear proportion of each lithology present in the study area
-    args:
-        df - pandas DataFrame with the data
-        lith_col - str, column name of lithology column
-        interval_col - str, column name of column with intervals (distance)
-        norm_to numeric, default 100, value to normalize to, 100 for pct
-        new_name - name of the series returned
-    returns:
-        pandas Series
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
+    lith_col : str
+        column name of lithology column
+    interval_col : str, optional, default 'Interval'
+        column name of column with intervals (distance)
+    norm_to : numeric, optional, default 100
+        value to normalize to, 100 for pct
+    new_name : str, optional, default 'lith_lin_pct'
+        name of the series returned
+    percent : bool, optional, default True
+        whether to return a percent value or not
+    Returns
+    -------
+    pandas Series
     """
     if percent:
         temp_series = (
@@ -69,18 +89,19 @@ def lith_linear_proportion(
 
 def pyramid_plotter(df, env_col, exp_col, raw_data=False):
     """Creates a pyramid plot (opposing bar plot) from two columns within a df
-    args:
-        df - Pandas DataFrame
-
-        env_col - str, name of first column to make bar plot from
-
-        exp_col - str, name of second column to make bar plot from
-
-        raw_data - bool, default False,
-            toggle whether to plot percentile or raw data
-
-    returns:
-        fig1 - matplotlib.pyplot figure
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
+    env_col : str
+        name of first column to make bar plot from
+    exp_col : str
+        name of second column to make bar plot from
+    raw_data : bool, optional, default False
+        toggle whether to plot percentile or raw data
+    Returns
+    -------
+    matplotlib.pyplot figure
     """
     sns.set_theme(style="darkgrid")
     limx = df.abs().max().max()
@@ -111,11 +132,11 @@ def pyramid_plotter(df, env_col, exp_col, raw_data=False):
     x_range.pop(-1)
     if raw_data:
         x_range = list(np.linspace(-limx_r, limx_r, 5).round())
-    ax1.xaxis.set_ticks(x_range)
+    ax1.xaxis.set_ticks(x_range)  # type: ignore
     xticklabels = [f"{x}%" for x in np.abs(x_range)]
     if raw_data:
         xticklabels = [f"{int(x)}" for x in np.abs(x_range)]
-    ax1.xaxis.set_ticklabels(xticklabels, fontsize=25)
+    ax1.xaxis.set_ticklabels(xticklabels, fontsize=25)  # type: ignore
     ax1.set_xlim(-limx_r, limx_r)
     h, l = ax1.get_legend_handles_labels()
     ax1.legend(
@@ -195,18 +216,32 @@ def bplot_lith_prop(
     scale_log=False,
 ):
     """Creates boxplots of sample property grouped by lithology
-    args:
-        df - pandas DataFrame with the data
-        xlab - str, label for the x-axis
-        title - str, title for the plot, put None for no title
-        proprt - str, column name of property to make boxplot of
-        group_by - str, default 'Lithology (Relog)' property to group by
-        lines - bool, default False, whether to plot vertical lines
-        lineloc - listlike, default (0.2,2,2), x-axis locations for
-                  vertical lines
-        pal - palette-like, default 'turbo', either named seaborn palette
-              or custom palette
-        scale_log - bool, default False, whether to plot x-axis with log scale
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
+    lithorder : listlike
+        list of lithologies to plot, in order
+    xlab : str
+        label for the x-axis
+    title : str
+        title for the plot, put None for no title
+    proprt : str
+        column name of property to make boxplot of
+    group_by : str, optional, default 'Lithology (Relog)'
+        property to group by
+    lines : bool, optional, default False
+        whether to plot vertical lines
+    lineloc : listlike, optional, default (0.2,2,2)
+        x-axis locations for vertical lines
+    pal : palette-like, optional, default 'turbo'
+        either named seaborn palette or custom palette
+    scale_log : bool, optional, default False
+        whether to plot x-axis with log scale
+    Returns
+    -------
+    fig : matplotlib Figure
+        Figure containing the plot
     """
     sns.set_theme(style="darkgrid")
     # filter lithology to those present in the study area
