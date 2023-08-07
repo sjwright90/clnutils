@@ -278,7 +278,8 @@ def test_continuity(
     envto="To",
 ):
     """Given two datasets with sample distance data, one with known discontinuities,
-        identifies if and where the second dataset shares those discontinuities
+        identifies if and where the second dataset has samples from within those
+        discontinuities
     Parameters
     ----------
     discontinuity : pandas DataFrame
@@ -301,10 +302,12 @@ def test_continuity(
         column name of sample_enc column for env_holes df, by default 'To'
     Returns
     -------
-    no_data_env : pandas DataFrame
-        dataframe with holes that do not have discontinuities
-    no_data_exp : pandas DataFrame
-        dataframe with holes that do not have discontinuities
+    no_data_env : list
+        list of rows from env_holes df that have discontinuities,
+        includes columns of sampleid, from, and to
+    no_data_exp : list
+        list of rows from discontinuity df that have discontinuities,
+        includes columns of sampleid, from, and to
     as a tuple with (no_data_env,no_data_exp)
     """
     # instantiate two empty lists
