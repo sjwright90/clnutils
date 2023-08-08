@@ -389,6 +389,7 @@ def rename_cols(torename, repldict=super_sub_scriptreplace):
             raise e
 
     torename = torename.replace("%", "pct", regex=True)
+    torename = torename.replace("gpt", "ppm", regex=True)
     torename = torename.replace(r"\(|\)", "", regex=True)
     torename = torename.replace(r"[^\w\d_]", "_", regex=True)
     if isinstance(repldict, dict):
