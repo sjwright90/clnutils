@@ -394,11 +394,12 @@ def rename_cols(torename, repldict=super_sub_scriptreplace):
     torename = torename.replace("%", "pct", regex=True)
     torename = torename.replace(r"\(|\)", "", regex=True)
     torename = torename.replace(r"[^\w\d_]", "_", regex=True)
-    torename = torename.str.lower()
     if isinstance(repldict, dict):
         torename = torename.replace(super_sub_scriptreplace, regex=True)
     torename = torename.replace(r"_{2,}", "_", regex=True)
     torename = torename.replace(r"^\s*$", np.nan, regex=True)
+    for col in torename.columns:
+        torename[col] = torename[col].str.lower()
 
     return torename
 
