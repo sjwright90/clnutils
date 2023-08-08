@@ -1,5 +1,5 @@
 import numpy as np
-from pandas import DataFrame, concat
+from pandas import DataFrame, concat, to_numeric
 from clnutils import super_sub_scriptreplace
 from math import isnan
 
@@ -433,3 +433,59 @@ def combine_names(nmcol1, nmcol2):
             # merge the two columns with double underscore
             combocols.append(str(a) + "__" + str(b))
     return combocols
+
+
+def make_numeric(df, subset=None, as_neg=True):
+    """
+    Identifies numeric strings preceeded by < or > and turns them into numeric
+    type. If converstion fails will return NaN for that observation.
+
+    Parameters
+    ----------
+    df : pandas dataframe
+
+    subset : list-like, default None
+        Subset of columns to apply numeric to. If none filters for
+        columns with ppm, gpt, or pct in the name. To override pass
+        an empty list.
+
+    as_neg : bool, default True
+        Whether to convert observations with < or > to negative
+        values.
+
+    Returns
+    -----
+    None
+        Changes the data in place.
+    """
+    if subset is None:
+        subset = [
+            col
+            for col in df.columns
+            if any(sub in col for sub in ["ppm", "gpt", "pct"])
+        ]
+    elif len(subset) == 0:
+        subset = df.columns
+    for col in df[subset].select_dtypes("O"):
+        if as_neg:
+            df[col] = to_numeric(
+                # replace spaces and < or > with - to make negative
+                # and coerce to numeric
+                # converty to string to get around mixed types
+                df[col]
+                .astype(str)
+                .str.replace(" ", "")
+                .str.replace(r"<|>", "-", regex=True),
+                errors="coerce",
+            )
+        else:
+            df[col] = to_numeric(
+                # replace spaces and < or > with "" to make positive
+                # and coerce to numeric
+                # converty to string to get around mixed types
+                df[col]
+                .astype(str)
+                .str.replace(" ", "")
+                .str.replace(r"<|>", "", regex=True),
+                errors="coerce",
+            )
