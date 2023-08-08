@@ -26,8 +26,9 @@ def overlap(
         column name of end depth
     samp_id1 : str, optional, default 'Sample ID'
         column name of sample id
-    intv : str, optional, default 'Interval'
-        column name of interval distance
+    intv : str, optional, default 'interval'
+        column name of interval distance, to have overlap calculated
+        from the data pass empty string ''
     Returns
     -------
     pandas DataFrame
@@ -42,8 +43,11 @@ def overlap(
 
     cols = [hole_col, dfrom, dto, samp_id1]
 
-    if intv is not None:
-        cols += [intv]
+    if intv not in df.columns.tolist():
+        intpresent = False
+    else:
+        cols.append(intv)
+        intpresent = True
 
     temp_d = {
         "ovlp_up": [],
@@ -63,10 +67,10 @@ def overlap(
 
         # traverse sub-df row by row
         for idx in range(len(temp) - 1):
-            # if the next row has "from" less than current "to" flag it
+            # if current row "dto" greater than next row "dfrom" flag it
             if temp.loc[idx, dto] > temp.loc[idx + 1, dfrom]:
                 # get interval distance of the two rows
-                if intv is not None:
+                if intpresent:
                     intv_0 = temp.loc[idx, intv]
                     intv_1 = temp.loc[idx + 1, intv]
                 else:
