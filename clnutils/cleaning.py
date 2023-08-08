@@ -4,6 +4,10 @@ from clnutils import super_sub_scriptreplace
 from math import isnan
 
 
+# NEED TO SPLIT INTO TWO SEPERATE FILES,
+# ONE FOR PRE-UPLOAD CLEANING (I.E. ON FULL DATASET)
+# ONE FOR POST-UPLOAD CLEANING (I.E. ON SUBSET OF DATASET AFTER
+# SELECTING A SPECIFIC SAMPLE TYPE)
 def overlap(
     df,
     hole_col="drill_hole",
@@ -489,3 +493,43 @@ def make_numeric(df, subset=None, as_neg=True):
                 .str.replace(r"<|>", "", regex=True),
                 errors="coerce",
             )
+
+
+def test_for_neg(df, subset=None):
+    """Tests for negative values in a dataframe
+        if negative values are found prompts user to continue
+        or raise an exception. To be used in tandem with 'make_numeric'
+    Parameters
+    ----------
+    df : pandas dataframe
+    subset : list-like, default None
+        Subset of columns to apply numeric to. If none filters for
+        columns with ppm, gpt, or pct in the name. To override pass
+        an empty list.
+    Returns
+    -----
+    None
+    """
+    negcols = []
+    if subset is None:
+        subset = [
+            col
+            for col in df.columns
+            if any(sub in col for sub in ["ppm", "gpt", "pct"])
+        ]
+    elif len(subset) == 0:
+        subset = df.columns
+    for col in df[subset].select_dtypes("O"):
+        if any(df[col].astype(str).str.contains("-", regex=True)):
+            negcols.append(col)
+
+    try:
+        assert len(negcols) == 0
+    except:
+        print("Negative values found")
+        inpt = input("Do you want to continue? [y/n]")
+        if "y" in inpt.lower():
+            pass
+        else:
+            print("Negative values found in columns: ", negcols)
+            raise Exception("Negative values found user chose not to continue")
