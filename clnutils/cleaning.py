@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 import pandas as pd
+from clnutils import super_sub_scriptreplace
 
 # %%
 
@@ -359,3 +360,32 @@ def test_continuity(
                     no_data_exp.append(row_x)
     # return any overlaps that exist
     return no_data_env, no_data_exp
+
+
+def rename_cols(renamedf, super_sub_scriptreplace):
+    """Renames columns in a dataframe to be more pythonic
+    Parameters
+    ----------
+    renamedf : pandas DataFrame
+        dataframe to be renamed
+    super_sub_scriptreplace : dict
+        dictionary of characters to replace in column names,
+        default replaces superscripts and subscripts with
+        their respective characters, e.g. H₂O becomes H2O
+    Returns
+    -------
+    None
+        modifies dataframe in place
+    """
+    # this function replaces select characters in column names
+    # with more pythonic characters inclusing only alphanumeric and _
+    # characters and makes all characters lowercase
+    for col in renamedf.columns:
+        renamedf[col] = renamedf[col].str.replace("%", "pct")
+        renamedf[col] = renamedf[col].str.replace("(", "", regex=False)
+        renamedf[col] = renamedf[col].str.replace(")", "", regex=False)
+        renamedf[col] = renamedf[col].str.replace(r"[^\w\d_]", "_", regex=True)
+        renamedf[col] = renamedf[col].str.lower()
+        for k, v in super_sub_scriptreplace.items():
+            renamedf[col] = renamedf[col].str.replace(k, v, regex=True)
+        renamedf[col] = renamedf[col].replace(r"_{2,}", "_", regex=True)
