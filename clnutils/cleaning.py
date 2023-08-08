@@ -6,18 +6,23 @@ import pandas as pd
 
 
 def overlap(
-    df, hole_col="Drill Hole", t1="From", t2="To", samp_id1="Sample ID", intv="Interval"
+    df,
+    hole_col="drill_hole",
+    dfrom="from",
+    dto="to",
+    samp_id1="sample_id",
+    intv="interval",
 ):
     """Assesses drillhole overlap between samples.
     Parameters
     ----------
     df : pandas DataFrame
         DataFrame containing the data
-    hole_col : str, optional, default 'Drill Hole'
+    hole_col : str, optional, default 'drill_hole'
         column name of hole_id
-    t1 : str, optional, default 'From'
+    dfrom : str, optional, default 'From'
         column name of start depth
-    t2 : str, optional, default 'To'
+    dto : str, optional, default 'To'
         column name of end depth
     samp_id1 : str, optional, default 'Sample ID'
         column name of sample id
@@ -35,7 +40,7 @@ def overlap(
     """
     holes = df[hole_col].unique()  # get the unique holes in the df
 
-    cols = [hole_col, t1, t2, samp_id1]
+    cols = [hole_col, dfrom, dto, samp_id1]
 
     if intv is not None:
         cols += [intv]
@@ -52,24 +57,24 @@ def overlap(
         # temp df of each hole
         temp = df.loc[df[hole_col] == dh, cols]
         # sort by start depth
-        temp = temp.sort_values(by=t1)
+        temp = temp.sort_values(by=dfrom)
         # reset index
         temp.reset_index(inplace=True)
 
         # traverse sub-df row by row
         for idx in range(len(temp) - 1):
-            # if the next row has "From" less than current "To" flag it
-            if temp.loc[idx, t2] > temp.loc[idx + 1, t1]:
+            # if the next row has "from" less than current "to" flag it
+            if temp.loc[idx, dto] > temp.loc[idx + 1, dfrom]:
                 # get interval distance of the two rows
                 if intv is not None:
                     intv_0 = temp.loc[idx, intv]
                     intv_1 = temp.loc[idx + 1, intv]
                 else:
-                    intv_0 = temp.loc[idx, t2] - temp.loc[idx, t1]
-                    intv_1 = temp.loc[idx + 1, t2] - temp.loc[idx + 1, t1]
+                    intv_0 = temp.loc[idx, dto] - temp.loc[idx, dfrom]
+                    intv_1 = temp.loc[idx + 1, dto] - temp.loc[idx + 1, dfrom]
 
                 # calculate overlap distance
-                temp_diff = temp.loc[idx, t2] - temp.loc[idx + 1, t1]
+                temp_diff = temp.loc[idx, dto] - temp.loc[idx + 1, dfrom]
 
                 # save to dictionary
                 temp_d["ovlp_up"].append(temp.loc[idx, samp_id1])
@@ -124,15 +129,16 @@ def id_ovlp_to_drop(
     return temp
 
 
-def drop_metals_aba_dup(df, which="Metals", ignore_na=True, custom_range=None):
+def drop_metals_aba_dup(df, which="metals", ignore_na=True):
     """Drops rows based on duplicates in either the Metals or ABA
        subset of columns.
     Parameters
     ----------
     df : pandas DataFrame
         DataFrame containing the data, from which duplicates will be dropped
-    which : str, optional, default 'Metals'
+    which : str or list-like, optional, default 'Metals'
         string, 'Metals' or 'ABA' indicates which group to drop
+        if list-like, must be a list of start and end column names
     ignore_na : bool, optional, default True
         whether to ignore rows with all nan values when droping duplicates
     custom_range : list-like, optional, default None
@@ -146,15 +152,19 @@ def drop_metals_aba_dup(df, which="Metals", ignore_na=True, custom_range=None):
     # predetermined ranges for metal and aba
     if which.lower() == "metals":
         # slice indexes from columns
-        a, b = df.columns.str.lower().slice_locs("metals", "zr (ppm)")
+        a, b = df.columns.str.lower().slice_locs("metals", "zr_ppm")
         cols = df.iloc[0, a + 1 : b].index
     elif which.lower() == "aba":
         a, b = df.columns.str.lower().slice_locs("aba", "metals")
         cols = df.iloc[0, a + 1 : b - 1].index
-    # same, but for range input
-    if custom_range is not None:
-        a, b = df.columns.str.lower().slice_locs(custom_range[0], custom_range[1])
+    elif isinstance(which, list) and len(which) == 2:
+        a, b = df.columns.str.lower().slice_locs(which[0], which[1])
         cols = df.iloc[0, a:b]
+    else:
+        raise ValueError(
+            f"""which must be either 'metals', 'aba', or list of length 2,
+            {which} is not valid"""
+        )
 
     if ignore_na:
         return df[(~df.duplicated(subset=cols)) | df[cols].isna().all(1)].reset_index(
@@ -164,30 +174,23 @@ def drop_metals_aba_dup(df, which="Metals", ignore_na=True, custom_range=None):
         return df.drop_duplicates(subset=cols).reset_index(drop=True)
 
 
-def get_discontinuity(exp_df, holeid="HOLEID", frm="SAMPFROM", to="SAMPTO"):
+def get_discontinuity(exp_df, holeid="drill_hole", dfrom="from", dto="to"):
     """Finds any discontinuities in downhole drill record
-
-    args:
-        exp_df - pandas dataframe with at minimum holeid, sample start,
-            and sample end
-
-        holeid - str, default 'HOLEID'
-            column name of hole id column
-
-        frm - str, default 'SAMPFROM'
-            column name of sample start column,
-            column needs to be numeric
-
-        to - str, default 'SAMPTO'
-            column name of sample end column,
-            column needs to be numeric
-
-    returns:
-        discontinuity - pandas dataframe with observations where
-            discontinuities are present. Columns = [holeid,to,frm],
-            'to' column is start of discontinuity, 'from' column is
-            end of discontinuity
-
+    Parameters:
+    -----------
+    exp_df - pandas dataframe
+        contains at minimum holeid, sample start, and sample end
+    holeid - str, default 'drill_hole'
+        column name of hole id column
+    dfrom - str, default 'from'
+        column name of sample start column, column needs to be numeric
+    dto - str, default 'to'
+        column name of sample end column, column needs to be numeric
+    Returns:
+    --------
+    discontinuity - pandas dataframe
+        with observations where discontinuities are present. Columns = [holeid,dto,dfrom],
+        'to' column is start of discontinuity, 'from' column is end of discontinuity
     """
 
     # instantiate empty dataframe
@@ -198,17 +201,17 @@ def get_discontinuity(exp_df, holeid="HOLEID", frm="SAMPFROM", to="SAMPTO"):
         # make temp copy
         temp = exp_df[exp_df[holeid] == hole].copy().reset_index(drop=True)
         # sort df by start column, order matters
-        temp.sort_values(by=frm, inplace=True)
-        # shift frm column by -1 to line up with to column
-        temp[frm] = temp[frm].shift(-1)
+        temp.sort_values(by=dfrom, inplace=True)
+        # shift dfrom column by -1 to line up with dto column
+        temp[dfrom] = temp[dfrom].shift(-1)
         # drop resultant NaN row
         temp.dropna(inplace=True)
-        # if realigned frm =/= to mark it
-        temp["match"] = temp[frm] == temp[to]
+        # if realigned dfrom =/= dto mark it
+        temp["match"] = temp[dfrom] == temp[dto]
         # record only non-matches
         discontinuity = pd.concat([discontinuity, temp[temp.match == 0]])
     # reindex columns for readability
-    return discontinuity.reindex(columns=[holeid, to, frm])
+    return discontinuity.reindex(columns=[holeid, dto, dfrom])
 
 
 def get_bounds(df):
@@ -270,12 +273,12 @@ def find_overlap(minval, maxval, targetfrom, targetto):
 def test_continuity(
     discontinuity,
     env_holes,
-    expholeid="HOLEID",
-    expfrm="SAMPFROM",
-    expto="SAMPTO",
-    envholeid="Drill Hole",
-    envfrm="From",
-    envto="To",
+    expholeid="drill_hole",
+    expfrm="from",
+    expto="to",
+    envholeid="drill_hole",
+    envfrm="from",
+    envto="to",
 ):
     """Given two datasets with sample distance data, one with known discontinuities,
         identifies if and where the second dataset has samples from within those
@@ -289,17 +292,17 @@ def test_continuity(
         test dataframe, discontinuities unknown, has at minimum hole_id, sample_start,
         sample_end
     expholeid : str, optional
-        column name of hole_id column for discontinuity df, by default 'HOLEID'
+        column name of hole_id column for discontinuity df, by default 'drill_hole'
     expfrm : str, optional
-        column name of sample_start column for discontinuity df, by default 'SAMPFROM'
+        column name of sample_start column for discontinuity df, by default 'from'
     expto : str, optional
-        column name of sample_enc column for discontinuity df, by default 'SAMPTO'
+        column name of sample_enc column for discontinuity df, by default 'to'
     envholeid : str, optional
-        column name of hole_id column for env_holes df, by default 'Drill Hole'
+        column name of hole_id column for env_holes df, by default 'drill_hole'
     envfrm : str, optional
-        column name of sample_start column for env_holes df, by default 'From'
+        column name of sample_start column for env_holes df, by default 'from'
     envto : str, optional
-        column name of sample_enc column for env_holes df, by default 'To'
+        column name of sample_enc column for env_holes df, by default 'to'
     Returns
     -------
     no_data_env : list

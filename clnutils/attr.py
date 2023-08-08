@@ -1,36 +1,36 @@
 # lithological order
 Lith_order = [
-    "K1",
+    "K1",  # intrusions
     "K2",
     "K3",
     "K4",
-    "K5",  # intrusions
+    "K5",
     "P1",
     "P1B",
     "P2",
     "P3",
     "P5",
     "P7",
-    "P8",  # intrusions
-    "PHBX",
+    "P8",
+    "PHBX",  # breccias
     "QABX",
     "BXTO",
-    "BX",  # breccias
-    "H1",
+    "BX",
+    "H1",  # wall rock
     "H1B",
     "CGL",
     "SS",
     "SARG",
-    "SSC",  # wall rock
+    "SSC",
     "SSL",
     "SSM",
     "SSN",
-    "VABX",
+    "VABX",  # unidentified
     "VALT",
-    "VATF",  # wall rock
+    "VATF",
     "UNCL",
     "UNID",
-    "IU",  # unidentified
+    "IU",
     "FLTZ",
     "FLTH",
     "MYLO",
@@ -55,9 +55,9 @@ lith_name_map = {
     "SVN": "MYLO",
     "DDRT": "K4",
     "PMFP": "K3",
-    "PPFP": "P3",  # ask, multiple possible
+    # "PPFP": "P3",  # ask, multiple possible
     "PMON": "P8",
-    "VU": "VABX",  # ask, multiple possible
+    # "VU": "VABX",  # ask, multiple possible
     "PSYN": "P8",
     "QTVN": "P1",
     "VCGL": "CGL",
