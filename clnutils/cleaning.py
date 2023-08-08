@@ -2,6 +2,7 @@ import numpy as np
 from pandas import DataFrame, concat, to_numeric
 from clnutils import super_sub_scriptreplace
 from math import isnan
+import re
 
 
 # NEED TO SPLIT INTO TWO SEPERATE FILES,
@@ -439,7 +440,7 @@ def combine_names(nmcol1, nmcol2):
     return combocols
 
 
-def make_numeric(df, subset=None, as_neg=True):
+def make_numeric(df, subset=None, as_neg=True, additional=[]):
     """
     Identifies numeric strings preceeded by < or > and turns them into numeric
     type. If converstion fails will return NaN for that observation.
@@ -450,24 +451,27 @@ def make_numeric(df, subset=None, as_neg=True):
 
     subset : list-like, default None
         Subset of columns to apply numeric to. If none filters for
-        columns with ppm, gpt, or pct in the name. To override pass
-        an empty list.
+        columns with ppm, gpt, pct, ppb, or ppt in the name and does
+        a regex search for the form 'kg*t'.
+        To override pass an empty list.
 
     as_neg : bool, default True
         Whether to convert observations with < or > to negative
         values.
+
+    additional : list-like, default []
+        Additional substrings to search for in column names to apply
+        numeric conversion to.
 
     Returns
     -----
     None
         Changes the data in place.
     """
+    substrsearch = ["ppm", "gpt", "pct", "ppb", "ppt"] + additional
     if subset is None:
-        subset = [
-            col
-            for col in df.columns
-            if any(sub in col for sub in ["ppm", "gpt", "pct"])
-        ]
+        subset = [col for col in df.columns if any(sub in col for sub in substrsearch)]
+        subset = subset + find_kgt(df.columns.drop(subset).tolist())
     elif len(subset) == 0:
         subset = df.columns
     for col in df[subset].select_dtypes("O"):
@@ -495,7 +499,7 @@ def make_numeric(df, subset=None, as_neg=True):
             )
 
 
-def test_for_neg(df, subset=None):
+def test_for_neg(df, subset=None, additional=[]):
     """Tests for negative values in a dataframe
         if negative values are found prompts user to continue
         or raise an exception. To be used in tandem with 'make_numeric'
@@ -506,17 +510,18 @@ def test_for_neg(df, subset=None):
         Subset of columns to apply numeric to. If none filters for
         columns with ppm, gpt, or pct in the name. To override pass
         an empty list.
+    additional : list-like, default []
+        Additional substrings to search for in column names to apply
+        negative testing to.
     Returns
     -----
     None
     """
     negcols = []
+    substrsearch = ["ppm", "gpt", "pct", "ppb", "ppt"] + additional
     if subset is None:
-        subset = [
-            col
-            for col in df.columns
-            if any(sub in col for sub in ["ppm", "gpt", "pct"])
-        ]
+        subset = [col for col in df.columns if any(sub in col for sub in substrsearch)]
+        subset = subset + find_kgt(df.columns.drop(subset).tolist())
     elif len(subset) == 0:
         subset = df.columns
     for col in df[subset].select_dtypes("O"):
@@ -529,7 +534,18 @@ def test_for_neg(df, subset=None):
         print("Negative values found")
         inpt = input("Do you want to continue? [y/n]")
         if "y" in inpt.lower():
+            print("Continuing")
+            print("Negative values found in columns: ", negcols)
             pass
         else:
             print("Negative values found in columns: ", negcols)
             raise Exception("Negative values found user chose not to continue")
+
+
+def find_kgt(colist):
+    matches = []
+    for col in colist:
+        if len(re.findall(r"kg[a-zA-Z0-9_]*t", col)) > 0:
+            matches.append(col)
+
+    return matches
