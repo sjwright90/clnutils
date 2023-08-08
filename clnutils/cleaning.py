@@ -1,9 +1,7 @@
-# %%
 import numpy as np
 from pandas import DataFrame, concat
 from clnutils import super_sub_scriptreplace
-
-# %%
+from math import isnan
 
 
 def overlap(
@@ -362,7 +360,6 @@ def test_continuity(
     return no_data_env, no_data_exp
 
 
-# %%
 def rename_cols(torename, repldict=super_sub_scriptreplace):
     """Renames object to be compatible with RDBMS
     Parameters
@@ -404,4 +401,33 @@ def rename_cols(torename, repldict=super_sub_scriptreplace):
     return torename
 
 
-# %%
+def combine_names(nmcol1, nmcol2):
+    """Combines two columns of names into a single column
+        ignores NaN values, if one column is a substring of the other,
+        the longer column is used, if two names are joined they are seperated
+        by a double underscore
+
+    Parameters
+    ----------
+    nmcol1 : list-like
+        first column of names
+    nmcol2 : list-like
+        second column of names
+    Returns
+    -------
+    list
+        combined column of names
+    """
+    combocols = []
+    for a, b in zip(nmcol1, nmcol2):
+        if isinstance(b, float) and isnan(b):
+            combocols.append(a)
+        elif isinstance(a, float) and isnan(a):
+            combocols.append(b)
+        elif str(a) in str(b):
+            combocols.append(b)
+        elif str(b) in str(a):
+            combocols.append(a)
+        else:
+            # merge the two columns with double underscore
+            combocols.append(str(a) + "__" + str(b))
