@@ -431,3 +431,4 @@ def combine_names(nmcol1, nmcol2):
         else:
             # merge the two columns with double underscore
             combocols.append(str(a) + "__" + str(b))
+    return combocols
