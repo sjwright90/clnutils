@@ -53,7 +53,7 @@ def roundup(num, base):
 def lith_linear_proportion(
     df,
     lith_col,
-    interval_col="Interval",
+    interval_col="interval",
     norm_to=100,
     new_name="lith_lin_pct",
     percent=True,
@@ -65,7 +65,7 @@ def lith_linear_proportion(
         DataFrame containing the data
     lith_col : str
         column name of lithology column
-    interval_col : str, optional, default 'Interval'
+    interval_col : str, optional, default 'interval'
         column name of column with intervals (distance)
     norm_to : numeric, optional, default 100
         value to normalize to, 100 for pct
@@ -209,7 +209,7 @@ def bplot_lith_prop(
     xlab,
     title,
     proprt,
-    group_by="Lithology (Relog)",
+    group_by="lithology_relog",
     lines=False,
     lineloc=(0.2, 2, 3),
     pal="turbo",
@@ -228,11 +228,11 @@ def bplot_lith_prop(
         title for the plot, put None for no title
     proprt : str
         column name of property to make boxplot of
-    group_by : str, optional, default 'Lithology (Relog)'
+    group_by : str, optional, default 'lithology_relog'
         property to group by
     lines : bool, optional, default False
         whether to plot vertical lines
-    lineloc : listlike, optional, default (0.2,2,2)
+    lineloc : listlike, optional, default (0.2,2,3)
         x-axis locations for vertical lines
     pal : palette-like, optional, default 'turbo'
         either named seaborn palette or custom palette
@@ -252,7 +252,7 @@ def bplot_lith_prop(
     figx, axx = plt.subplots(figsize=(20, 20))
     _ = sns.boxplot(data=df, y=group_by, x=proprt, order=lithorder, palette=pal, ax=axx)
     if scale_log:
-        axx.set_xlim([-0.5, high])
+        axx.set_xlim([-0.5, high])  # type: ignore
         axx.set_xscale("symlog")
         axx.xaxis.set_major_formatter(ticker.ScalarFormatter())
         lab_x = -0.2
@@ -263,7 +263,7 @@ def bplot_lith_prop(
         axx.set_xlim(a - x_range / 15, b)
         lab_x = a - (x_range / 15) * 0.2  # lab_x for plotting anotations
     axx.set_xlabel(xlab, fontsize=25)
-    axx.set_ylabel(None)
+    axx.set_ylabel(None)  # type: ignore
     y_max, y_min = axx.get_ylim()
     axx.set_ylim(y_max + 0.5, y_min - 0.5)
     axx.tick_params(axis="both", which="major", labelsize=25)
@@ -272,8 +272,8 @@ def bplot_lith_prop(
             lineloc,
             ymin=0,
             ymax=1,
-            colors="#980043",
-            linestyles="--",
+            colors="#980043",  # type: ignore
+            linestyles="--",  # type: ignore
             transform=axx.get_xaxis_transform(),
         )
     axx.set_title(title, fontsize=30)
