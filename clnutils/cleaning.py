@@ -362,13 +362,13 @@ def test_continuity(
     return no_data_env, no_data_exp
 
 
-def rename_cols(renamedf, super_sub_scriptreplace):
+def rename_cols(renamedf, repldict=super_sub_scriptreplace):
     """Renames columns in a dataframe to be more pythonic
     Parameters
     ----------
     renamedf : pandas DataFrame
         dataframe to be renamed
-    super_sub_scriptreplace : dict
+    repldict : dict
         dictionary of characters to replace in column names,
         default replaces superscripts and subscripts with
         their respective characters, e.g. H₂O becomes H2O
@@ -386,6 +386,7 @@ def rename_cols(renamedf, super_sub_scriptreplace):
         renamedf[col] = renamedf[col].str.replace(")", "", regex=False)
         renamedf[col] = renamedf[col].str.replace(r"[^\w\d_]", "_", regex=True)
         renamedf[col] = renamedf[col].str.lower()
-        for k, v in super_sub_scriptreplace.items():
-            renamedf[col] = renamedf[col].str.replace(k, v, regex=True)
+        if isinstance(repldict, dict):
+            for k, v in repldict.items():
+                renamedf[col] = renamedf[col].str.replace(k, v, regex=True)
         renamedf[col] = renamedf[col].replace(r"_{2,}", "_", regex=True)
