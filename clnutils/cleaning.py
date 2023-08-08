@@ -1,6 +1,6 @@
 # %%
 import numpy as np
-import pandas as pd
+from pandas import DataFrame, concat
 from clnutils import super_sub_scriptreplace
 
 # %%
@@ -87,7 +87,7 @@ def overlap(
                 temp_d["ovlp_dist"].append(temp_diff)
                 temp_d["pct_ovlp_up"].append(temp_diff / intv_0)
                 temp_d["pct_ovlp_lw"].append(temp_diff / intv_1)
-    overlap_idx = pd.DataFrame(temp_d)
+    overlap_idx = DataFrame(temp_d)
     return overlap_idx
 
 
@@ -199,7 +199,7 @@ def get_discontinuity(exp_df, holeid="drill_hole", dfrom="from", dto="to"):
     """
 
     # instantiate empty dataframe
-    discontinuity = pd.DataFrame()
+    discontinuity = DataFrame()
 
     # loop through for each holeid in df
     for hole in exp_df[holeid].unique():
@@ -214,7 +214,7 @@ def get_discontinuity(exp_df, holeid="drill_hole", dfrom="from", dto="to"):
         # if realigned dfrom =/= dto mark it
         temp["match"] = temp[dfrom] == temp[dto]
         # record only non-matches
-        discontinuity = pd.concat([discontinuity, temp[temp.match == 0]])
+        discontinuity = concat([discontinuity, temp[temp.match == 0]])
     # reindex columns for readability
     return discontinuity.reindex(columns=[holeid, dto, dfrom])
 
@@ -362,11 +362,12 @@ def test_continuity(
     return no_data_env, no_data_exp
 
 
-def rename_cols(renamedf, repldict=super_sub_scriptreplace):
-    """Renames columns in a dataframe to be more pythonic
+# %%
+def rename_cols(torename, repldict=super_sub_scriptreplace):
+    """Renames object to be compatible with RDBMS
     Parameters
     ----------
-    renamedf : pandas DataFrame
+    torename : pandas DataFrame
         dataframe to be renamed
     repldict : dict
         dictionary of characters to replace in column names,
@@ -374,19 +375,33 @@ def rename_cols(renamedf, repldict=super_sub_scriptreplace):
         their respective characters, e.g. H₂O becomes H2O
     Returns
     -------
-    None
-        modifies dataframe in place
+    pandas dataframe
+        dataframe with renamed columns, if a dataframe
+        was passed modifies in place, else returns a copy
+        of original data as a dataframe
     """
     # this function replaces select characters in column names
     # with more pythonic characters inclusing only alphanumeric and _
     # characters and makes all characters lowercase
-    for col in renamedf.columns:
-        renamedf[col] = renamedf[col].str.replace("%", "pct")
-        renamedf[col] = renamedf[col].str.replace("(", "", regex=False)
-        renamedf[col] = renamedf[col].str.replace(")", "", regex=False)
-        renamedf[col] = renamedf[col].str.replace(r"[^\w\d_]", "_", regex=True)
-        renamedf[col] = renamedf[col].str.lower()
+
+    if not isinstance(torename, DataFrame):
+        try:
+            torename = DataFrame(torename)
+        except Exception as e:
+            print(f"Could not convert {torename} to DataFrame")
+            raise e
+    for col in torename:
+        torename[col] = torename[col].str.replace("%", "pct")
+        torename[col] = torename[col].str.replace("(", "", regex=False)
+        torename[col] = torename[col].str.replace(")", "", regex=False)
+        torename[col] = torename[col].str.replace(r"[^\w\d_]", "_", regex=True)
+        torename[col] = torename[col].str.lower()
         if isinstance(repldict, dict):
             for k, v in repldict.items():
-                renamedf[col] = renamedf[col].str.replace(k, v, regex=True)
-        renamedf[col] = renamedf[col].replace(r"_{2,}", "_", regex=True)
+                torename[col] = torename[col].str.replace(k, v, regex=True)
+        torename[col] = torename[col].replace(r"_{2,}", "_", regex=True)
+
+    return torename
+
+
+# %%
