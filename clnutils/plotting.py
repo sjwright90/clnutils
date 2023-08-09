@@ -1,8 +1,11 @@
+# %%
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import math
 import matplotlib.ticker as ticker
+
+# %%
 
 
 def id_generator(df, hole_col, from_col, to_col, composite=False):
@@ -203,6 +206,7 @@ def pyramid_plotter(df, env_col, exp_col, raw_data=False):
     return fig1
 
 
+# %%
 def bplot_lith_prop(
     df,
     lithorder,
@@ -253,10 +257,10 @@ def bplot_lith_prop(
     figx, axx = plt.subplots(figsize=(20, 20))
     _ = sns.boxplot(data=df, y=group_by, x=proprt, order=lithorder, palette=pal, ax=axx)
     if scale_log:
-        axx.set_xlim([-0.5, high])  # type: ignore
+        axx.set_xlim([min(-0.5, low - 0.8), high])  # type: ignore
         axx.set_xscale("symlog")
         axx.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        lab_x = min(-0.2, low - 0.5)  # lab_x for plotting anotations
+        lab_x = min(-0.2, low - 0.4)  # lab_x for plotting anotations
     else:
         a, b = axx.get_xlim()
         x_range = b - a
@@ -294,3 +298,6 @@ def bplot_lith_prop(
         )
 
     return figx
+
+
+# %%
