@@ -404,7 +404,10 @@ def rename_cols(torename, repldict=super_sub_scriptreplace):
     for col in torename.columns:
         torename[col] = torename[col].str.lower()
 
-    return torename
+    if torename.shape[1] == 1:
+        return torename.squeeze()
+    else:
+        return torename
 
 
 def combine_names(nmcol1, nmcol2):
