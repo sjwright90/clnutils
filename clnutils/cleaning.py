@@ -394,7 +394,7 @@ def rename_cols(torename, repldict=super_sub_scriptreplace):
             raise e
 
     torename = torename.replace("%", "pct", regex=True)
-    torename = torename.replace("gpt", "ppm", regex=True)
+    torename = torename.replace("(?i)gpt", "ppm", regex=True)
     torename = torename.replace(r"\(|\)", "", regex=True)
     torename = torename.replace(r"[^\w\d_]", "_", regex=True)
     if isinstance(repldict, dict):
@@ -507,7 +507,7 @@ def make_numeric(df, subset=None, as_neg=True, additional=[], exclude=[]):
             )
 
 
-def test_for_neg(df, subset=None, additional=[]):
+def test_for_neg(df, subset=None, additional=[], exclude=[]):
     """Tests for negative values in a dataframe
         if negative values are found prompts user to continue
         or raise an exception. To be used in tandem with 'make_numeric'
@@ -521,6 +521,8 @@ def test_for_neg(df, subset=None, additional=[]):
     additional : list-like, default []
         Additional substrings to search for in column names to apply
         negative testing to.
+    exclude : list-like, default []
+        List of substrings to exclude from negative testing.
     Returns
     -----
     None
@@ -532,6 +534,8 @@ def test_for_neg(df, subset=None, additional=[]):
         subset = subset + find_kgt(df.columns.drop(subset).tolist())
     elif len(subset) == 0:
         subset = df.columns
+    if len(exclude) > 0:
+        subset = [col for col in subset if not any(sub in col for sub in exclude)]
     for col in df[subset].select_dtypes("O"):
         if any(df[col].astype(str).str.contains("-", regex=True)):
             negcols.append(col)
