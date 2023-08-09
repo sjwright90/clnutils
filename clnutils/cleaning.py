@@ -539,6 +539,9 @@ def test_for_neg(df, subset=None, additional=[], exclude=[]):
     for col in df[subset].select_dtypes("O"):
         if any(df[col].astype(str).str.contains("-", regex=True)):
             negcols.append(col)
+    for col in df[subset].select_dtypes("number"):
+        if any(df[col] < 0):
+            negcols.append(col)
 
     try:
         assert len(negcols) == 0
