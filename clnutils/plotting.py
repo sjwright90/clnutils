@@ -249,13 +249,14 @@ def bplot_lith_prop(
     lithorder = [lith for lith in lithorder if lith in lithin]
     # highest value of the target variable
     high = df[proprt].max()
+    low = df[proprt].min()
     figx, axx = plt.subplots(figsize=(20, 20))
     _ = sns.boxplot(data=df, y=group_by, x=proprt, order=lithorder, palette=pal, ax=axx)
     if scale_log:
         axx.set_xlim([-0.5, high])  # type: ignore
         axx.set_xscale("symlog")
         axx.xaxis.set_major_formatter(ticker.ScalarFormatter())
-        lab_x = -0.2
+        lab_x = min(-0.2, low - 0.5)  # lab_x for plotting anotations
     else:
         a, b = axx.get_xlim()
         x_range = b - a
