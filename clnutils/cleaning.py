@@ -443,7 +443,7 @@ def combine_names(nmcol1, nmcol2):
     return combocols
 
 
-def make_numeric(df, subset=None, as_neg=True, additional=[]):
+def make_numeric(df, subset=None, as_neg=True, additional=[], exclude=[]):
     """
     Identifies numeric strings preceeded by < or > and turns them into numeric
     type. If converstion fails will return NaN for that observation.
@@ -466,6 +466,9 @@ def make_numeric(df, subset=None, as_neg=True, additional=[]):
         Additional substrings to search for in column names to apply
         numeric conversion to.
 
+    exclude : list-like, default []
+        List of substrings to exclude from numeric conversion.
+
     Returns
     -----
     None
@@ -477,6 +480,8 @@ def make_numeric(df, subset=None, as_neg=True, additional=[]):
         subset = subset + find_kgt(df.columns.drop(subset).tolist())
     elif len(subset) == 0:
         subset = df.columns
+    if len(exclude) > 0:
+        subset = [col for col in subset if not any(sub in col for sub in exclude)]
     for col in df[subset].select_dtypes("O"):
         if as_neg:
             df[col] = to_numeric(
