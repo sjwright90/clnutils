@@ -206,7 +206,6 @@ def pyramid_plotter(df, env_col, exp_col, raw_data=False):
     return fig1
 
 
-# %%
 def bplot_lith_prop(
     df,
     lithorder,
@@ -298,6 +297,3 @@ def bplot_lith_prop(
         )
 
     return figx
-
-
-# %%
