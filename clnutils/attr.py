@@ -51,6 +51,7 @@ lith_name_map = {
     "CVN": "FLTZ",
     "QSBX": "QABX",
     "P4": "P2",
+    "P6": "P2",    # JVG Based on Ross Hammett's 9/7/2023 email
     "QVN": "FLTH",
     "SVN": "MYLO",
     "DDRT": "K4",
