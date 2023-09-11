@@ -90,7 +90,14 @@ def lith_linear_proportion(
     return temp_series
 
 
-def pyramid_plotter(df, env_col, exp_col, raw_data=False):
+def pyramid_plotter(
+    df,
+    env_col,
+    exp_col,
+    raw_data=False,
+    title="Environmental vs Exploration",
+    ledg_labels=["Environmental", "Exploration"],
+):
     """Creates a pyramid plot (opposing bar plot) from two columns within a df
     Parameters
     ----------
@@ -129,7 +136,7 @@ def pyramid_plotter(df, env_col, exp_col, raw_data=False):
     if raw_data:
         ax1.set_xlabel("Total Sampled Footage")
     ax1.set_ylabel("Lithology", fontsize=30)
-    ax1.set_title("Environmental vs Exploration", fontsize=35)
+    ax1.set_title(title, fontsize=35)
     x_range = list(np.arange(-limx_r, limx_r + 1, 5))
     x_range.pop(0)
     x_range.pop(-1)
@@ -144,7 +151,7 @@ def pyramid_plotter(df, env_col, exp_col, raw_data=False):
     h, l = ax1.get_legend_handles_labels()
     ax1.legend(
         handles=h,
-        labels=["Environmental", "Exploration"],
+        labels=ledg_labels,
         ncol=2,
         loc="center",
         frameon=False,
