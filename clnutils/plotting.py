@@ -96,7 +96,7 @@ def pyramid_plotter(
     exp_col,
     raw_data=False,
     title="Environmental vs Exploration",
-    ledg_labels=["Environmental", "Exploration"],
+    ledg_labels=None,
 ):
     """Creates a pyramid plot (opposing bar plot) from two columns within a df
     Parameters
@@ -113,6 +113,8 @@ def pyramid_plotter(
     -------
     matplotlib.pyplot figure
     """
+    if ledg_labels is None:
+        ledg_labels = ["Environmental", "Exploration"]
     sns.set_theme(style="darkgrid")
     limx = df.abs().max().max()
     limx_r = roundup(limx, 5)

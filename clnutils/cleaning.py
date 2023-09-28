@@ -443,7 +443,7 @@ def combine_names(nmcol1, nmcol2):
     return combocols
 
 
-def make_numeric(df, subset=None, as_neg=True, additional=[], exclude=[]):
+def make_numeric(df, subset=None, as_neg=True, additional=None, exclude=None):
     """
     Identifies numeric strings preceeded by < or > and turns them into numeric
     type. If converstion fails will return NaN for that observation.
@@ -462,11 +462,11 @@ def make_numeric(df, subset=None, as_neg=True, additional=[], exclude=[]):
         Whether to convert observations with < or > to negative
         values.
 
-    additional : list-like, default []
+    additional : list-like, default None
         Additional substrings to search for in column names to apply
         numeric conversion to.
 
-    exclude : list-like, default []
+    exclude : list-like, default None
         List of substrings to exclude from numeric conversion.
 
     Returns
@@ -474,6 +474,9 @@ def make_numeric(df, subset=None, as_neg=True, additional=[], exclude=[]):
     None
         Changes the data in place.
     """
+    for obj in [additional, exclude]:
+        if obj is None:
+            obj = []
     substrsearch = ["ppm", "gpt", "pct", "ppb", "ppt"] + additional
     if subset is None:
         subset = [col for col in df.columns if any(sub in col for sub in substrsearch)]
@@ -507,7 +510,7 @@ def make_numeric(df, subset=None, as_neg=True, additional=[], exclude=[]):
             )
 
 
-def test_for_neg(df, subset=None, additional=[], exclude=[]):
+def test_for_neg(df, subset=None, additional=None, exclude=None):
     """Tests for negative values in a dataframe
         if negative values are found prompts user to continue
         or raise an exception. To be used in tandem with 'make_numeric'
@@ -518,15 +521,18 @@ def test_for_neg(df, subset=None, additional=[], exclude=[]):
         Subset of columns to apply numeric to. If none filters for
         columns with ppm, gpt, or pct in the name. To override pass
         an empty list.
-    additional : list-like, default []
+    additional : list-like, default None
         Additional substrings to search for in column names to apply
         negative testing to.
-    exclude : list-like, default []
+    exclude : list-like, default None
         List of substrings to exclude from negative testing.
     Returns
     -----
     None
     """
+    for obj in [additional, exclude]:
+        if obj is None:
+            obj = []
     negcols = []
     substrsearch = ["ppm", "gpt", "pct", "ppb", "ppt"] + additional
     if subset is None:
