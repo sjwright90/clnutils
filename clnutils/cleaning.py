@@ -474,9 +474,10 @@ def make_numeric(df, subset=None, as_neg=True, additional=None, exclude=None):
     None
         Changes the data in place.
     """
-    for obj in [additional, exclude]:
-        if obj is None:
-            obj = []
+    if additional is None:
+        additional = []
+    if exclude is None:
+        exclude = []
     substrsearch = ["ppm", "gpt", "pct", "ppb", "ppt"] + additional
     if subset is None:
         subset = [col for col in df.columns if any(sub in col for sub in substrsearch)]
