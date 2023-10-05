@@ -531,9 +531,10 @@ def test_for_neg(df, subset=None, additional=None, exclude=None):
     -----
     None
     """
-    for obj in [additional, exclude]:
-        if obj is None:
-            obj = []
+    if additional is None:
+        additional = []
+    if exclude is None:
+        exclude = []
     negcols = []
     substrsearch = ["ppm", "gpt", "pct", "ppb", "ppt"] + additional
     if subset is None:
