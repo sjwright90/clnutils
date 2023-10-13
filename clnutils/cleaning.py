@@ -1,14 +1,63 @@
 import numpy as np
-from pandas import DataFrame, concat, to_numeric
+from pandas import DataFrame, concat, to_numeric, read_csv, read_excel, ExcelFile
 from clnutils import super_sub_scriptreplace
 from math import isnan
 import re
+from pathlib import Path
 
 
 # NEED TO SPLIT INTO TWO SEPERATE FILES,
 # ONE FOR PRE-UPLOAD CLEANING (I.E. ON FULL DATASET)
 # ONE FOR POST-UPLOAD CLEANING (I.E. ON SUBSET OF DATASET AFTER
 # SELECTING A SPECIFIC SAMPLE TYPE)
+def load_file_pandas(path, sheet_name=""):
+    """
+    Imports data from a csv file and returns a pandas dataframe
+    """
+    file_ext = Path(path).suffix
+
+    if len(sheet_name) == 0:
+        xl = ExcelFile(path)
+        sheet_name = input(
+            f"Please select a sheet from the following: {xl.sheet_names}"
+        )
+
+    match file_ext:
+        case ".csv":
+            df = read_csv(path)
+        case ".xlsx":
+            df = read_excel(path, sheet_name=sheet_name)
+        case _:
+            print("File extension not supported")
+            return None
+
+    return df
+
+
+def import_data():
+    wdir_raw = Path(
+        input("Enter the path to the raw data folder, or entire filepath: ")
+        .strip('"')
+        .strip("'")
+    )
+
+    if wdir_raw.is_file():
+        file_name = wdir_raw.name
+        wdir_raw = wdir_raw.parent
+    else:
+        file_name = input(
+            "Enter the name of the file to be loaded, with the extension: "
+        )
+
+    tab_name = input(
+        "Enter the name of the tab to be loaded, if applicable, press enter to skip: "
+    )
+
+    df = load_file_pandas(wdir_raw / file_name, tab_name)
+
+    return df
+
+
 def overlap(
     df,
     hole_col="drill_hole",
