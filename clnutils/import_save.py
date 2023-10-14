@@ -13,7 +13,6 @@ def load_file_pandas(path) -> DataFrame:
             df = read_csv(path)
         case ".xlsx":
             xl = ExcelFile(path)
-            print(f"Sheet names: {xl.sheet_names}")
             sheet_name = input(
                 f"Please select a sheet from the following: {xl.sheet_names}"
             )
@@ -77,5 +76,8 @@ def save_data(df, counter=0):
             else:
                 print("Invalid input. Please enter y or n.")
                 continue
+
+    if not wdir_save.exists():
+        wdir_save.mkdir(parents=True)
 
     df.to_csv(wdir_save / file_name, index=False, encoding="utf-8-sig")

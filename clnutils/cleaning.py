@@ -1,60 +1,217 @@
 import numpy as np
-from pandas import DataFrame, concat, to_numeric, read_csv, read_excel, ExcelFile
+from pandas import DataFrame, concat, to_numeric
 from clnutils import super_sub_scriptreplace
 from math import isnan
 import re
-from pathlib import Path
 
 
 # NEED TO SPLIT INTO TWO SEPERATE FILES,
 # ONE FOR PRE-UPLOAD CLEANING (I.E. ON FULL DATASET)
 # ONE FOR POST-UPLOAD CLEANING (I.E. ON SUBSET OF DATASET AFTER
 # SELECTING A SPECIFIC SAMPLE TYPE)
-def load_file_pandas(path, sheet_name=""):
-    """
-    Imports data from a csv file and returns a pandas dataframe
-    """
-    file_ext = Path(path).suffix
 
-    if len(sheet_name) == 0:
-        xl = ExcelFile(path)
-        sheet_name = input(
-            f"Please select a sheet from the following: {xl.sheet_names}"
-        )
 
-    match file_ext:
-        case ".csv":
-            df = read_csv(path)
-        case ".xlsx":
-            df = read_excel(path, sheet_name=sheet_name)
-        case _:
-            print("File extension not supported")
-            return None
+def remove_missing_depth(
+    df,
+    dfrom="from",
+    dto="to",
+    notes_path=None,
+    df_name="ENV DB",
+):
+    """Removes rows with missing depth values
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
+
+    dfrom : str, optional, default 'from'
+        column name of start depth
+
+    dto : str, optional, default 'to'
+        column name of end depth
+
+    notes_path : str, optional, default None
+        path to notes file to write to, if None does not write to file
+    Returns
+    -------
+    pandas DataFrame
+        DataFrame with missing depth rows removed
+    """
+    # convert to numeric
+    for col in [dfrom, dto]:
+        df[col] = to_numeric(df[col], errors="coerce")
+    n_missing_from = df[dfrom].isna().sum()
+    n_missing_to = df[dto].isna().sum()
+    # drop rows with missing depth
+    df = df.loc[df[dfrom].notna()].copy().reset_index(drop=True)
+    df = df.loc[df[dto].notna()].copy().reset_index(drop=True)
+    # write to notes file
+    if notes_path is not None:
+        with open(notes_path, "a+") as note:
+            note.write(
+                f"{df_name} Number of samples with missing start depth: {n_missing_from}\n"
+            )
+            note.write(f"Number of samples with missing end depth: {n_missing_to}\n")
+            note.write(
+                f"{df_name} Number of samples remaining after missing depth droped: {len(df)}\n"
+            )
 
     return df
 
 
-def import_data():
-    wdir_raw = Path(
-        input("Enter the path to the raw data folder, or entire filepath: ")
-        .strip('"')
-        .strip("'")
-    )
+def remove_duplicates(
+    df,
+    dupe_col="unique_duplicate",
+    metal_start="al_pct",
+    metal_end="zr_ppm",
+    aba_start="aba",
+    aba_end="metals",
+    notes_path=None,
+    df_name="ENV DB",
+):
+    """Removes duplicate rows from a dataframe
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
 
-    if wdir_raw.is_file():
-        file_name = wdir_raw.name
-        wdir_raw = wdir_raw.parent
-    else:
-        file_name = input(
-            "Enter the name of the file to be loaded, with the extension: "
-        )
+    dupe_col : str, optional, default 'unique_duplicate'
+        column name of unique duplicate column
 
-    tab_name = input(
-        "Enter the name of the tab to be loaded, if applicable, press enter to skip: "
-    )
+    metal_start : str, optional, default 'al_pct'
+        column name of first metal column
 
-    df = load_file_pandas(wdir_raw / file_name, tab_name)
+    metal_end : str, optional, default 'zr_ppm'
+        column name of last metal column
 
+    aba_start : str, optional, default 'aba'
+        column name of first ABA column
+
+    aba_end : str, optional, default 'metals'
+        column name of last ABA column
+
+    notes_path : str, optional, default None
+        path to notes file to write to, if None does not write to file
+
+    Returns
+    -------
+    pandas DataFrame
+        DataFrame with duplicate rows removed
+    """
+    # drop duplicates (i.e. same data in the row)
+    sh0 = df.shape[0]  # original number of rows
+    df = (
+        df.loc[df[dupe_col] != "Duplicate"].copy().reset_index(drop=True)
+    )  # drop duplicates from dupe_col
+    sh1 = df.shape[0]  # number of rows after dropping duplicates from dupe_col
+    df.drop_duplicates(inplace=True)  # drop all duplicates
+    df.dropna(how="all", axis=0)  # drop rows where all values are NaN
+    df.dropna(how="all", axis=1)  # drop columns where all values are NaN
+    df.reset_index(inplace=True, drop=True)  # reset index
+    sh2 = df.shape[0]  # number of rows after dropping all duplicates
+
+    # drop duplicated metals and ABA
+    df = df.drop_duplicates(
+        subset=df.loc[0, metal_start:metal_end].index
+    )  # drop duplicated metals
+    sh3 = df.shape[0]  # number of rows after dropping duplicated metals
+    df.reset_index(inplace=True, drop=True)  # reset index
+    df = df.drop_duplicates(
+        subset=df.loc[0, aba_start:aba_end].index
+    )  # drop duplicated ABA
+    sh4 = df.shape[0]  # number of rows after dropping duplicated ABA
+    df.reset_index(inplace=True, drop=True)  # reset index
+    # drop rows where all metals NaN
+    df = df.dropna(
+        how="all", subset=df.loc[0, metal_start:metal_end].index
+    ).reset_index(
+        drop=True
+    )  # drop rows where all metals NaN
+    sh5 = df.shape[0]  # number of rows after dropping all NaN metals
+
+    # write to notes file
+    if notes_path is not None:
+        with open(notes_path, "a+") as note:
+            note.write(
+                f"{df_name} Number of samples with named duplicates: {sh0 - sh1}\n"
+            )
+            note.write(
+                f"{df_name} Number of samples remaining after named duplicates dropped: {sh1}\n"
+            )
+            note.write(f"{df_name} Number of duplicated rows ENV DB: {sh1-sh2}\n")
+            note.write(
+                f"{df_name} Number of samples remaining after duplicate rows droped: {sh2}\n"
+            )
+            note.write(f"{df_name} Samples with duplicated metals ENV DB: {sh2-sh3}\n")
+            note.write(f"{df_name} Samples with duplicated ABA ENV DB: {sh3-sh4}\n")
+            note.write(
+                f"{df_name} Number of samples remaining after metal and ABA duplicates dropped: {sh4}\n"
+            )
+            note.write(f"{df_name} Number samples with all NaN in metals: {sh4-sh5}\n")
+            note.write(
+                f"{df_name} Number samples remaining after all NaN metals droped: {sh5}\n"
+            )
+
+    return df
+
+
+def drop_target_col_na(
+    df,
+    target_col_individual=None,
+    target_col_group=None,
+    notes_path=None,
+    df_name="ENV DB",
+):
+    """Drop rows where a given target column is nan or all columns from a target group are nan. Can take multiple individual columns and or multiple groups
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        DataFrame containing the data
+
+    target_col_individual : list-like
+        column name or list of column names to drop rows where the column is nan
+
+    target_col_group : list-like
+        list of lists of column names to drop rows where all columns in the list are nan
+
+    Returns
+    -------
+    pandas DataFrame
+        DataFrame with rows dropped
+    """
+    shp0 = df.shape[0]  # original number of rows
+    # drop rows where target_col_individual is nan
+    if isinstance(target_col_individual, str):
+        target_col_individual = [target_col_individual]
+
+    if isinstance(target_col_group, str):
+        target_col_group = [target_col_group]
+
+    if target_col_individual is None:
+        target_col_individual = []
+    for col in target_col_individual:
+        df = df.dropna(subset=[col], how="all").reset_index(drop=True)
+
+    if target_col_group is None:
+        target_col_group = []
+    # drop rows where all columns in target_col_group are nan
+    for col_group in target_col_group:
+        if isinstance(col_group, str):
+            print("Warning single column passed to 'target_col_group', skipping...")
+            continue
+        df = df.dropna(subset=col_group, how="all").reset_index(drop=True)
+
+    shp1 = df.shape[0]  # number of rows after dropping rows
+    # write to notes file
+    if notes_path is not None:
+        with open(notes_path, "a+") as note:
+            note.write(
+                f"{df_name} Number of rows with missing target column(s): {shp0-shp1}\n"
+            )
+            note.write(
+                f"{df_name} Number of samples remaining after dropping rows with missing target column(s): {shp1}\n"
+            )
     return df
 
 
@@ -73,11 +230,11 @@ def overlap(
         DataFrame containing the data
     hole_col : str, optional, default 'drill_hole'
         column name of hole_id
-    dfrom : str, optional, default 'From'
+    dfrom : str, optional, default 'from'
         column name of start depth
-    dto : str, optional, default 'To'
+    dto : str, optional, default 'to'
         column name of end depth
-    samp_id1 : str, optional, default 'Sample ID'
+    samp_id1 : str, optional, default 'sample_id'
         column name of sample id
     intv : str, optional, default 'interval'
         column name of interval distance, to have overlap calculated
@@ -184,51 +341,6 @@ def id_ovlp_to_drop(
     )
 
     return temp
-
-
-def drop_metals_aba_dup(df, which="metals", ignore_na=True):
-    """Drops rows based on duplicates in either the Metals or ABA
-       subset of columns.
-    Parameters
-    ----------
-    df : pandas DataFrame
-        DataFrame containing the data, from which duplicates will be dropped
-    which : str or list-like, optional, default 'Metals'
-        string, 'Metals' or 'ABA' indicates which group to drop
-        if list-like, must be a list of start and end column names
-    ignore_na : bool, optional, default True
-        whether to ignore rows with all nan values when droping duplicates
-    custom_range : list-like, optional, default None
-        length 2 list of strings for begin and end column names to subset,
-        subset is inclusive on both ends
-    Returns
-    -------
-    pandas DataFrame
-        returns a copy of the dataframe with duplicates dropped
-    """
-    # predetermined ranges for metal and aba
-    if which.lower() == "metals":
-        # slice indexes from columns
-        a, b = df.columns.str.lower().slice_locs("metals", "zr_ppm")
-        cols = df.iloc[0, a + 1 : b].index
-    elif which.lower() == "aba":
-        a, b = df.columns.str.lower().slice_locs("aba", "metals")
-        cols = df.iloc[0, a + 1 : b - 1].index
-    elif isinstance(which, list) and len(which) == 2:
-        a, b = df.columns.str.lower().slice_locs(which[0], which[1])
-        cols = df.iloc[0, a:b]
-    else:
-        raise ValueError(
-            f"""which must be either 'metals', 'aba', or list of length 2,
-            {which} is not valid"""
-        )
-
-    if ignore_na:
-        return df[(~df.duplicated(subset=cols)) | df[cols].isna().all(1)].reset_index(
-            drop=True
-        )
-    else:
-        return df.drop_duplicates(subset=cols).reset_index(drop=True)
 
 
 def get_discontinuity(exp_df, holeid="drill_hole", dfrom="from", dto="to"):
@@ -594,7 +706,9 @@ def test_for_neg(df, subset=None, additional=None, exclude=None):
     if len(exclude) > 0:
         subset = [col for col in subset if not any(sub in col for sub in exclude)]
     for col in df[subset].select_dtypes("O"):
-        if any(df[col].astype(str).str.contains("-", regex=True)):
+        if any(df[col].astype(str).str.startswith("-")):
+            negcols.append(col)
+        if any(df[col].astype(str).str.contains(r"^<|^>")):
             negcols.append(col)
     for col in df[subset].select_dtypes("number"):
         if any(df[col] < 0):
@@ -603,8 +717,7 @@ def test_for_neg(df, subset=None, additional=None, exclude=None):
     try:
         assert len(negcols) == 0
     except:
-        print("Negative values found")
-        inpt = input("Do you want to continue? [y/n]")
+        inpt = input("Negative values found. Do you want to continue? [y/n]")
         if "y" in inpt.lower():
             print("Continuing")
             print("Negative values found in columns: ", negcols)
