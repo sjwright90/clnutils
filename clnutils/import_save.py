@@ -18,8 +18,7 @@ def load_file_pandas(path) -> DataFrame:
             )
             df = read_excel(path, sheet_name=sheet_name)
         case _:
-            print("File extension not supported")
-            return None
+            raise ValueError("File type not supported")
 
     return df
 
