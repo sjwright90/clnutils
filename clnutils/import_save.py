@@ -25,7 +25,7 @@ def load_file_pandas(path) -> DataFrame:
 
 def import_data() -> DataFrame:
     wdir_raw = Path(
-        input("Enter the path to the raw data folder, or entire filepath: ")
+        input("Enter the path to the data folder, or entire filepath: ")
         .strip('"')
         .strip("'")
     )
