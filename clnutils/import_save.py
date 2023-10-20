@@ -40,6 +40,8 @@ def import_data() -> DataFrame:
 
     df = load_file_pandas(wdir_raw / file_name)
 
+    print(f"Loading data from {wdir_raw / file_name}...")
+
     return df
 
 
