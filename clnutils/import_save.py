@@ -67,7 +67,7 @@ def save_data(df, counter=0):
         while True:
             overwrite = input("File already exists. Overwrite? (y/n): ")
             if "y" in overwrite.lower():
-                print("Overwriting file...")
+                print(f"Overwriting file {wdir_save/file_name}...")
                 break
             elif "n" in overwrite.lower():
                 save_data(df, counter + 1)
@@ -78,5 +78,7 @@ def save_data(df, counter=0):
 
     if not wdir_save.exists():
         wdir_save.mkdir(parents=True)
+
+    print(f"Saving file to {wdir_save / file_name}...")
 
     df.to_csv(wdir_save / file_name, index=False, encoding="utf-8-sig")
