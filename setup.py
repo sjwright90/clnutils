@@ -11,6 +11,7 @@ setup(
         "pandas>=1.5",
         "seaborn>=0.12",
         "matplotlib>=3.7",
+        "openpyxl>=3.0",
     ],
     python_requires=">=3.9",
 )
