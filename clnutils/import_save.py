@@ -1,14 +1,9 @@
 from pandas import read_csv, read_excel, ExcelFile, DataFrame
 from pathlib import Path
-from IPython.display import display
-from ipyfilechooser import FileChooser
-from clrutils import ksm_py_path_str
 
-# Create and display a FileChooser widget
-fc = FileChooser(str(ksm_py_path_str))
-# Set a file filter patern
-fc.filter_pattern = ["*.csv", "*.xlsx", "*.xls"]
-display(fc)
+# from IPython.display import display
+# from ipyfilechooser import FileChooser
+# from clrutils import ksm_py_path_str
 
 
 def load_file_pandas(path) -> DataFrame:
@@ -46,10 +41,14 @@ def import_data() -> DataFrame:
         file_name = input(
             "Enter the name of the file to be loaded, with the extension: "
         )
+    # THIS NEEDS WORK, NEED A WAY TO STALL THE SCRIPT UNTIL A FILE IS SELECTED
     # fc = FileChooser(str(ksm_py_path_str))
     # # Set a file filter patern
     # fc.filter_pattern = ["*.csv", "*.xlsx", "*.xls"]
     # display(fc)
+    # file_name = fc.selected_filename
+    # if file_name is not None:
+    #     wdir_raw = Path(fc.selected)
 
     df = load_file_pandas(wdir_raw / file_name)
 
