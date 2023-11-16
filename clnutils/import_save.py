@@ -1,5 +1,14 @@
 from pandas import read_csv, read_excel, ExcelFile, DataFrame
 from pathlib import Path
+from IPython.display import display
+from ipyfilechooser import FileChooser
+from clrutils import ksm_py_path_str
+
+# Create and display a FileChooser widget
+fc = FileChooser(str(ksm_py_path_str))
+# Set a file filter patern
+fc.filter_pattern = ["*.csv", "*.xlsx", "*.xls"]
+display(fc)
 
 
 def load_file_pandas(path) -> DataFrame:
@@ -37,6 +46,10 @@ def import_data() -> DataFrame:
         file_name = input(
             "Enter the name of the file to be loaded, with the extension: "
         )
+    # fc = FileChooser(str(ksm_py_path_str))
+    # # Set a file filter patern
+    # fc.filter_pattern = ["*.csv", "*.xlsx", "*.xls"]
+    # display(fc)
 
     df = load_file_pandas(wdir_raw / file_name)
 
