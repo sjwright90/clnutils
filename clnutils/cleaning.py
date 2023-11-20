@@ -40,8 +40,10 @@ def remove_missing_depth(
     # convert to numeric
     for col in [dfrom, dto]:
         df[col] = to_numeric(df[col], errors="coerce")
-    n_missing_from = df[dfrom].isna().sum()
-    n_missing_to = df[dto].isna().sum()
+
+    n_missing_from_to = df.loc[df[dfrom].isna() & df[dto].isna()].shape[0]
+    n_missing_from_not_to = df.loc[df[dfrom].isna() & ~df[dto].isna()].shape[0]
+    n_missing_to_not_from = df.loc[~df[dfrom].isna() & df[dto].isna()].shape[0]
     # drop rows with missing depth
     df = df.loc[df[dfrom].notna()].copy().reset_index(drop=True)
     df = df.loc[df[dto].notna()].copy().reset_index(drop=True)
@@ -49,9 +51,14 @@ def remove_missing_depth(
     if notes_path is not None:
         with open(notes_path, "a+") as note:
             note.write(
-                f"{df_name} Number of samples with missing start depth: {n_missing_from}\n"
+                f"{df_name} Number of samples with missing start depth: {n_missing_from_not_to}\n"
             )
-            note.write(f"Number of samples with missing end depth: {n_missing_to}\n")
+            note.write(
+                f"{df_name} Number of samples with missing end depth: {n_missing_to_not_from}\n"
+            )
+            note.write(
+                f"{df_name} Number of samples with missing start and end depth: {n_missing_from_to}\n"
+            )
             note.write(
                 f"{df_name} Number of samples remaining after missing depth droped: {len(df)}\n"
             )
