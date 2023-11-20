@@ -51,10 +51,10 @@ def remove_missing_depth(
     if notes_path is not None:
         with open(notes_path, "a+") as note:
             note.write(
-                f"{df_name} Number of samples with missing start depth: {n_missing_from_not_to}\n"
+                f"{df_name} Number of samples with missing start depth only: {n_missing_from_not_to}\n"
             )
             note.write(
-                f"{df_name} Number of samples with missing end depth: {n_missing_to_not_from}\n"
+                f"{df_name} Number of samples with missing end depth only: {n_missing_to_not_from}\n"
             )
             note.write(
                 f"{df_name} Number of samples with missing start and end depth: {n_missing_from_to}\n"
