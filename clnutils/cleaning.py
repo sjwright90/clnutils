@@ -117,6 +117,17 @@ def remove_duplicates(
     df.reset_index(inplace=True, drop=True)  # reset index
     sh2 = df.shape[0]  # number of rows after dropping all duplicates
 
+    # drop all NaN metals and ABA
+    df = df.dropna(
+        how="all", subset=df.loc[0, metal_start:metal_end].index
+    )  # drop all NaN metals
+    sh3a = df.shape[0]  # number of rows after dropping all NaN metals
+    df.reset_index(inplace=True, drop=True)  # reset index
+    df = df.dropna(
+        how="all", subset=df.loc[0, aba_start:aba_end].index
+    )  # drop all NaN ABA
+    sh3b = df.shape[0]  # number of rows after dropping all NaN ABA
+    df.reset_index(inplace=True, drop=True)  # reset index
     # drop duplicated metals and ABA
     df = df.drop_duplicates(
         subset=df.loc[0, metal_start:metal_end].index
@@ -149,8 +160,24 @@ def remove_duplicates(
             note.write(
                 f"{df_name} Number of samples remaining after duplicate rows droped: {sh2}\n"
             )
-            note.write(f"{df_name} Samples with duplicated metals ENV DB: {sh2-sh3}\n")
-            note.write(f"{df_name} Samples with duplicated ABA ENV DB: {sh3-sh4}\n")
+            note.write(
+                f"{df_name} Number of samples with all NaN in metals: {sh2-sh3a}\n"
+            )
+            note.write(
+                f"{df_name} Number of samples remaining after all NaN metals droped: {sh3a}\n"
+            )
+            note.write(
+                f"{df_name} Number of samples with all NaN in ABA: {sh3a-sh3b}\n"
+            )
+            note.write(
+                f"{df_name} Number of samples remaining after all NaN ABA droped: {sh3b}\n"
+            )
+            note.write(
+                f"{df_name} Samples with duplicated metals, not NaN ENV DB: {sh3b-sh3}\n"
+            )
+            note.write(
+                f"{df_name} Samples with duplicated ABA, not NaN ENV DB: {sh3-sh4}\n"
+            )
             note.write(
                 f"{df_name} Number of samples remaining after metal and ABA duplicates dropped: {sh4}\n"
             )
