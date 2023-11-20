@@ -139,13 +139,6 @@ def remove_duplicates(
     )  # drop duplicated ABA
     sh4 = df.shape[0]  # number of rows after dropping duplicated ABA
     df.reset_index(inplace=True, drop=True)  # reset index
-    # drop rows where all metals NaN
-    df = df.dropna(
-        how="all", subset=df.loc[0, metal_start:metal_end].index
-    ).reset_index(
-        drop=True
-    )  # drop rows where all metals NaN
-    sh5 = df.shape[0]  # number of rows after dropping all NaN metals
 
     # write to notes file
     if notes_path is not None:
@@ -180,10 +173,6 @@ def remove_duplicates(
             )
             note.write(
                 f"{df_name} Number of samples remaining after metal and ABA duplicates dropped: {sh4}\n"
-            )
-            note.write(f"{df_name} Number samples with all NaN in metals: {sh4-sh5}\n")
-            note.write(
-                f"{df_name} Number samples remaining after all NaN metals droped: {sh5}\n"
             )
 
     return df
