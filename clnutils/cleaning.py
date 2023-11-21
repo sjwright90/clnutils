@@ -243,7 +243,7 @@ def overlap(
     hole_col="drill_hole",
     dfrom="from",
     dto="to",
-    samp_id1="sample_id",
+    samp_id1="sample_id_duplicate",
     intv="interval",
 ):
     """Assesses drillhole overlap between samples.
