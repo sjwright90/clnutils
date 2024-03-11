@@ -213,7 +213,7 @@ def pyramid_plotter(
                     va="center",
                 )
 
-    return fig1
+    return fig1, ax1
 
 
 def bplot_lith_prop(
