@@ -304,6 +304,6 @@ def bplot_lith_prop(
             verticalalignment="center",
             size=20,
             color="k",
-        )
+        )  # return
 
     return figx, axx
