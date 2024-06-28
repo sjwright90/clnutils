@@ -305,5 +305,6 @@ def bplot_lith_prop(
             size=20,
             color="k",
         )
+    # return the figure
 
     return figx, axx
